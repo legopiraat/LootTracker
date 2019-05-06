@@ -2,4 +2,4 @@
 /target/
 /project/target/
 /.idea/
-/src/main/resources/apikey.conf
+reference.conf

@@ -3,7 +3,8 @@ import Dependencies._
 lazy val root = (project in file("."))
   .settings(
     organization := "io.legopiraat",
-    name := "ogame-calculator",
+    name := "loot-tracker",
+    mainClass := Some("io.legopiraat.ogame.App"),
     scalaVersion := "2.12.8",
     version := "0.1",
     libraryDependencies ++= Seq(

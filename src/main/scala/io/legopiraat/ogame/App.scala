@@ -23,7 +23,7 @@ object App extends IOApp {
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, Server[F]] = {
     for {
       dbConfig <- Resource.liftF(parser.decodePathF[F, DatabaseConfig]("loot-tracker"))
-      apiKeyConfig <- Resource.liftF(parser.decodePathF[F, ApiKeyConfig](""))
+      apiKeyConfig <- Resource.liftF(parser.decodePathF[F, ApiKeyConfig]("ogame"))
       connEc <- ExecutionContexts.fixedThreadPool[F](5)
       txnEc <- ExecutionContexts.cachedThreadPool[F]
       dbContext <- DatabaseConfig.dbTransactor(dbConfig, connEc, txnEc)

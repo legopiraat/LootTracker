@@ -1,5 +1,7 @@
 package io.legopiraat.ogame.loottracker
 
+import java.sql.SQLException
+
 import cats._
 import doobie._
 import doobie.implicits._
@@ -15,8 +17,8 @@ class LootTrackerRepository[F[_] : Monad](val xa: Transactor[F]) {
 
   import LootTrackerSql._
 
-  def save(raid: Raid): F[Int] = {
-    insert(raid).run.transact(xa)
+  def save(raid: Raid): F[Either[SQLException, Int]] = {
+    insert(raid).run.attemptSql.transact(xa)
   }
 
   def getAll(name: String): F[List[Raid]] = {
