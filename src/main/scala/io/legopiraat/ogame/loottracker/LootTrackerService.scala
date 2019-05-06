@@ -1,0 +1,29 @@
+package io.legopiraat.ogame.loottracker
+
+import cats.Monad
+import cats.data.{EitherT, OptionT}
+import io.legopiraat.ogame.client.OgameClient
+import io.legopiraat.ogame.loottracker.LootTrackerEndpoint.{Raid, ReportKey}
+
+import scala.language.higherKinds
+
+object LootTrackerService {
+
+  def apply[F[_]](lootTrackerRepository: LootTrackerRepository[F], ogameClient: OgameClient[F]): LootTrackerService[F] = {
+    new LootTrackerService[F](lootTrackerRepository, ogameClient)
+  }
+}
+
+class LootTrackerService[F[_]](lootTrackerRepository: LootTrackerRepository[F], ogameClient: OgameClient[F]) {
+
+  def trackLoot(reportKey: ReportKey)(implicit m: Monad[F]): EitherT[F, Exception, Raid] = {
+    for {
+      raid <- EitherT.liftF(ogameClient.getCombatReport(reportKey.reportKey))
+      _ <- EitherT.liftF(lootTrackerRepository.save(raid))
+    } yield raid
+  }
+
+  def allLoot(name: String)(implicit m: Monad[F]): OptionT[F, List[Raid]] = {
+    OptionT.liftF(lootTrackerRepository.getAll(name))
+  }
+}
