@@ -34,5 +34,20 @@ object Dependencies {
     val http4sClient = "org.http4s" %% "http4s-blaze-client" % Version.http4s % Test
   }
 
+  val all = Seq(
+    catsCore,
+    circeGeneric,
+    circeConfig,
+    http4sServer,
+    http4sClient,
+    http4sCirce,
+    http4sDsl,
+    logback,
+    doobieCore,
+    doobiePostgres,
+    doobieHikari,
+    flyway
+  )
+
 }
 

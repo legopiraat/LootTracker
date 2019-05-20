@@ -1,5 +1,7 @@
 package io.legopiraat.ogame.loottracker
 
+import java.time.{LocalDateTime, ZonedDateTime}
+
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.implicits._
@@ -8,7 +10,7 @@ import io.circe.syntax._
 import io.legopiraat.ogame.loottracker.LootTrackerEndpoint.{Raid, ReportKey}
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
-import org.http4s.{EntityDecoder, HttpRoutes}
+import org.http4s.{EntityDecoder, HttpRoutes, QueryParamDecoder}
 
 import scala.language.higherKinds
 
@@ -25,6 +27,10 @@ class LootTrackerEndpoint[F[_] : Effect](lootTrackerService: LootTrackerService[
 
   implicit val raidDecoder: EntityDecoder[F, Raid] = jsonOf[F, Raid]
   implicit val reportKeyDecoder: EntityDecoder[F, ReportKey] = jsonOf[F, ReportKey]
+  implicit val dateTimeQueryParamDecoder: QueryParamDecoder[ZonedDateTime] = QueryParamDecoder[String].map(ZonedDateTime.parse)
+
+  case object StartDateParamMatcher extends QueryParamDecoderMatcher[ZonedDateTime]("startDate")
+  case object EndDateParamMatcher extends QueryParamDecoderMatcher[ZonedDateTime]("endDate")
 
   def endpoints: HttpRoutes[F] = HttpRoutes.of[F] {
     case req@POST -> Root / "loot" / "tracker" =>
@@ -38,9 +44,9 @@ class LootTrackerEndpoint[F[_] : Effect](lootTrackerService: LootTrackerService[
         case Left(e) => BadRequest()
       }
 
-    case GET -> Root / "loot" / "tracker" / name =>
+    case GET -> Root / "loot" / "tracker" / name :? StartDateParamMatcher(startDate) +& EndDateParamMatcher(endDate) =>
       val result: OptionT[F, List[Raid]] = for {
-        result <- lootTrackerService.allLoot(name)
+        result <- lootTrackerService.retrieveLoot(name, startDate, endDate)
       } yield result
 
       result.value.flatMap {

@@ -1,6 +1,6 @@
 package io.legopiraat.ogame
 
-object FunctionReactorCalculator extends App {
+object FunctionReactorCalculator {
 
   def energyOutput(reactorLevel: Long, energyTechLevel: Long): Long = {
     Math.pow(30 * reactorLevel * (1.05 + energyTechLevel * 0.01), reactorLevel).toLong

@@ -1,13 +1,14 @@
 package io.legopiraat.ogame.loottracker
 
 import java.sql.SQLException
+import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 
 import cats._
 import doobie._
 import doobie.implicits._
 import io.legopiraat.ogame.loottracker.LootTrackerEndpoint.Raid
 
-import scala.language.higherKinds
+import scala.language.{higherKinds, implicitConversions}
 
 object LootTrackerRepository {
   def apply[F[_] : Monad](xa: Transactor[F]): LootTrackerRepository[F] = new LootTrackerRepository[F](xa)
@@ -21,8 +22,12 @@ class LootTrackerRepository[F[_] : Monad](val xa: Transactor[F]) {
     insert(raid).run.attemptSql.transact(xa)
   }
 
-  def getAll(name: String): F[List[Raid]] = {
-    selectAll(name).transact(xa)
+  def getByNameAndBetweenStartDateAndEndDate(name: String, startDate: ZonedDateTime, endDate: ZonedDateTime): F[List[Raid]] = {
+    selectBetween(name, startDate, endDate).transact(xa)
+  }
+
+  implicit def localDateTimeToEpoch(date: LocalDateTime): Long = {
+    date.toEpochSecond(ZoneOffset.ofHours(1))
   }
 }
 
@@ -34,8 +39,10 @@ object LootTrackerSql {
     VALUES (${raid.id}, ${raid.timestamp}, ${raid.metal}, ${raid.crystal}, ${raid.deuterium}, ${raid.playerName})
     """.update
 
-  def selectAll(name: String): ConnectionIO[List[Raid]] =
+  def selectBetween(name: String, startDate: ZonedDateTime, endDate: ZonedDateTime): ConnectionIO[List[Raid]] =
     sql"""
-          SELECT ID, METAL, CRYSTAL, DEUTERIUM, TIMESTAMP, PLAYER_NAME FROM RAID WHERE player_name = $name
+          SELECT ID, METAL, CRYSTAL, DEUTERIUM, TIMESTAMP, PLAYER_NAME FROM RAID
+          WHERE player_name = $name
+          AND TIMESTAMP BETWEEN ${startDate.toString} AND ${endDate.toString}
       """.query[Raid].to[List]
 }

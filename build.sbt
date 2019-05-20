@@ -1,26 +1,13 @@
-import Dependencies._
 
 lazy val root = (project in file("."))
   .settings(
     organization := "io.legopiraat",
     name := "loot-tracker",
-    mainClass := Some("io.legopiraat.ogame.App"),
+    mainClass in assembly := Some("io.legopiraat.ogame.App"),
+    assemblyJarName in assembly := "ogame-loot-tracker.jar",
     scalaVersion := "2.12.8",
     version := "0.1",
-    libraryDependencies ++= Seq(
-      catsCore,
-      circeGeneric,
-      circeConfig,
-      http4sServer,
-      http4sClient,
-      http4sCirce,
-      http4sDsl,
-      logback,
-      doobieCore,
-      doobiePostgres,
-      doobieHikari,
-      flyway
-    ),
+    libraryDependencies ++= Dependencies.all,
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4")
   )

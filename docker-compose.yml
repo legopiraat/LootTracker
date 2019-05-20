@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  ogame-loot-tracker:
+    build: .
+    ports:
+      - "8585:8585"
+  postgres:
+    image: postgres:11-alpine

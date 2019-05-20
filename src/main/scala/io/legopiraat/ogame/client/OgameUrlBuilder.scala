@@ -15,6 +15,7 @@ trait OgameUrlBuilder {
     reportTypeShorthand match {
       case "cr" => s"${uriPrefix}combat$uriSuffix"
       case "rr" => s"${uriPrefix}recycle$uriSuffix"
+      case "sr" => s"${uriPrefix}spy$uriSuffix"
     }
   }
 }
