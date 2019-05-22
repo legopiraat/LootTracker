@@ -20,7 +20,9 @@ object LootTrackerEndpoint {
   }
 
   case class Raid(id: String, metal: Long, crystal: Long, deuterium: Long, timestamp: String, playerName: String)
-  case class ReportKey(reportKey: String)
+  case class ReportKey(reportKey: String) {
+    override def toString: String = reportKey
+  }
 }
 
 class LootTrackerEndpoint[F[_] : Effect](lootTrackerService: LootTrackerService[F]) extends Http4sDsl[F] {
@@ -33,7 +35,7 @@ class LootTrackerEndpoint[F[_] : Effect](lootTrackerService: LootTrackerService[
   case object EndDateParamMatcher extends QueryParamDecoderMatcher[ZonedDateTime]("endDate")
 
   def endpoints: HttpRoutes[F] = HttpRoutes.of[F] {
-    case req@POST -> Root / "loot" / "tracker" =>
+    case req@POST -> Root / "track" / "loot" / "combat" =>
       val result: F[Either[Exception, Raid]] = for {
         reportKey <- req.as[ReportKey]
         result <- lootTrackerService.trackLoot(reportKey).value
@@ -44,9 +46,20 @@ class LootTrackerEndpoint[F[_] : Effect](lootTrackerService: LootTrackerService[
         case Left(e) => BadRequest()
       }
 
-    case GET -> Root / "loot" / "tracker" / name :? StartDateParamMatcher(startDate) +& EndDateParamMatcher(endDate) =>
+    case req@POST -> Root / "track" / "loot" / "debris" =>
+      val result: F[Either[Exception, Raid]] = for {
+        reportKey <- req.as[ReportKey]
+        result <- lootTrackerService.trackRecycleLoot(reportKey).value
+      } yield result
+
+      result.flatMap {
+        case Right(e) => Ok(e.asJson)
+        case Left(e) => BadRequest()
+      }
+
+    case GET -> Root / "track" / "loot" / name :? StartDateParamMatcher(startDate) +& EndDateParamMatcher(endDate) =>
       val result: OptionT[F, List[Raid]] = for {
-        result <- lootTrackerService.retrieveLoot(name, startDate, endDate)
+        result <- lootTrackerService.retrieveLootByDate(name, startDate, endDate)
       } yield result
 
       result.value.flatMap {

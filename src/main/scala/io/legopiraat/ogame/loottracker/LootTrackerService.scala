@@ -1,6 +1,6 @@
 package io.legopiraat.ogame.loottracker
 
-import java.time.{LocalDateTime, ZonedDateTime}
+import java.time.ZonedDateTime
 
 import cats.Monad
 import cats.data.{EitherT, OptionT}
@@ -20,12 +20,19 @@ class LootTrackerService[F[_]](lootTrackerRepository: LootTrackerRepository[F], 
 
   def trackLoot(reportKey: ReportKey)(implicit m: Monad[F]): EitherT[F, Exception, Raid] = {
     for {
-      raid <- EitherT.liftF(ogameClient.getCombatReport(reportKey.reportKey))
+      raid <- EitherT.liftF(ogameClient.getCombatReport(reportKey))
       _ <- EitherT.liftF(lootTrackerRepository.save(raid))
     } yield raid
   }
 
-  def retrieveLoot(name: String, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit m: Monad[F]): OptionT[F, List[Raid]] = {
+  def trackRecycleLoot(reportKey: ReportKey)(implicit m: Monad[F]): EitherT[F, Exception, Raid] = {
+    for {
+      raid <- EitherT.liftF(ogameClient.getRecycleReport(reportKey))
+      _ <- EitherT.liftF(lootTrackerRepository.save(raid))
+    } yield raid
+  }
+
+  def retrieveLootByDate(name: String, startDate: ZonedDateTime, endDate: ZonedDateTime)(implicit m: Monad[F]): OptionT[F, List[Raid]] = {
     OptionT.liftF(lootTrackerRepository.getByNameAndBetweenStartDateAndEndDate(name, startDate, endDate))
   }
 }
