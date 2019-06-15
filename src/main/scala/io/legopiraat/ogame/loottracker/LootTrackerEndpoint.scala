@@ -1,6 +1,6 @@
 package io.legopiraat.ogame.loottracker
 
-import java.time.{LocalDateTime, ZonedDateTime}
+import java.time.ZonedDateTime
 
 import cats.data.OptionT
 import cats.effect.Effect

@@ -11,6 +11,9 @@ import org.http4s.server.blaze._
 import org.http4s.server.{Router, Server}
 import io.circe.config.parser
 import io.legopiraat.ogame.client.OgameClient
+import org.http4s.server.middleware.{CORS, CORSConfig}
+
+import scala.concurrent.duration._
 
 import scala.language.higherKinds
 
@@ -19,6 +22,12 @@ object App extends IOApp {
   private[this] val root: String = "/ogame-tracker"
 
   override def run(args: List[String]): IO[ExitCode] = createServer().use(_ => IO.never).as(ExitCode.Success)
+
+  private[this] val corsConfig = CORSConfig(
+    anyOrigin = true,
+    anyMethod = true,
+    allowCredentials = false,
+    maxAge = 1.day.toSeconds)
 
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, Server[F]] = {
     for {
@@ -31,7 +40,7 @@ object App extends IOApp {
       lootTrackerRepository = LootTrackerRepository[F](dbContext)
       lootTrackerService = LootTrackerService[F](lootTrackerRepository, ogameClient)
       services = LootTrackerEndpoint.endpoints(lootTrackerService)
-      httpApp = Router(root -> services).orNotFound
+      httpApp = CORS(Router(root -> services).orNotFound, corsConfig)
       _ <- Resource.liftF(DatabaseConfig.initializeDb(dbConfig))
       server <- BlazeServerBuilder[F]
         .bindHttp(8585, "0.0.0.0")

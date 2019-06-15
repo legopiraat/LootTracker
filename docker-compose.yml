@@ -5,5 +5,15 @@ services:
     build: .
     ports:
       - "8585:8585"
+    restart: always
   postgres:
     image: postgres:11-alpine
+    environment:
+      - POSTGRES_USER=${P_USER}
+      - POSTGRES_PASSWORD=${P_PWD}
+    restart: always
+
+
+
+
+#PORT=433 docker-compose <command>
